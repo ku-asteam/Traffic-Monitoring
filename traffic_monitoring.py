@@ -12,6 +12,12 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
         super(SimpleMonitor, self).__init__(*args, **kwargs)
         self.datapaths = {}
         self.monitor_thread = hub.spawn(self._monitor)
+        file1 = open("FlowStats.txt", "w")
+        file1.write('datapath, in-port, eth-dst, out-port, packets, bytes, duration-sec, length')
+        file1.close()
+        file2 = open("PortStats.txt", "w")
+        file2.write('datapath, port, rx-pkts, rx-bytes, rx-error, tx-pkts, tx-bytes, tx-error')
+        file2.close()
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
@@ -44,16 +50,21 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
+        file1 = open("FlowStats.txt", "w")
         body = ev.msg.body
         self.logger.info('datapath         in-port  eth-dst           out-port packets  bytes    duration-sec length')
         self.logger.info('---------------- -------- ----------------- -------- -------- -------- ------------ --------')
         for stat in sorted([flow for flow in body if flow.priority == 1], key=lambda flow: (flow.match['in_port'], flow.match['eth_dst'])):
             self.logger.info('%016x %8x %17s %8x %8d %8d %12d %8d', ev.msg.datapatht.id, stat.match['in_port'], stat.match['eth_dst'], stat.instructions[0].actions[0].port, stat.packet_count, stat.byte_count, stat.duration_sec, stat.length)
+            file1.write("\n" + str(ev.msg.datapatht.id) + "," + str(stat.match['in_port']) + "," + str(stat.match['eth_dst']) + "," + str(stat.instructions[0].actions[0].port) + "," + str(stat.packet_count) + "," + str(stat.byte_count) + "," + str(stat.duration_sec) + "," + str(stat.length))
+        file1.close()
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
+        file2 = open("PortStats.txt", "w")
         body = ev.msg.body
         self.logger.info('datapath         port     rx-pkts  rx-bytes rx-error tx-pkts  tx-bytes tx-error')
         self.logger.info('---------------- -------- -------- -------- -------- -------- -------- --------')
         for stat in sorted(body, key=attrgetter('port_no')):
             self.logger.info('%016x %8x %8d %8d %8d %8d %8d %8d', ev.msg.datapatht.id, stat.port_no, stat.rx_packtets, stat.rx_bytes, stat.rx_errors, stat.tx_packtets, stat.tx_bytes, stat.tx_errors)
+            file2.write("\n" + str(ev.msg.datapatht.id) + "," + str(stat.port_no) + "," + str(stat.rx_packtets) + "," + str(stat.rx_bytes) + "," + str(stat.rx_errors) + "," + str(stat.tx_packtets) + "," + str(stat.tx_bytes) + "," + str(stat.tx_errors))
