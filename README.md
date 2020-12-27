@@ -7,11 +7,11 @@ OpenFlow를 사용해 스위치의 통계 정보를 얻는 Application. RYU의 s
 스위칭 허브의 실행을 위해 OpenFlow 스위치는 Open vSwitch 실행 환경으로 mininet을 사용한다.
 - Mininet
 - Open vSwitch
-- Ryu
-    `$ sudo apt-get install git python-dev python-setuptools python-pip`
-    $ git clone https://github.com/osrg/ryu.git
-    $ cd ryu
-    $ sudo pip install .
+- Ryu  
+`$ sudo apt-get install git python-dev python-setuptools python-pip`  
+`$ git clone https://github.com/osrg/ryu.git`  
+`$ cd ryu'  
+`$ sudo pip install .`
 
 ## Running
 - Mininet 환경 시작
