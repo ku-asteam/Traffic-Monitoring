@@ -26,8 +26,12 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
         file3.close()
         
         file4 = open("MeterStats.txt", "w")
-        file4.write('datapath, meter-id, length, ref_count, packet-in-count, byte-in-count, duration-set')
+        file4.write('datapath, meter-id, length, ref_count, packet-in-count, byte-in-count, duration-sec')
         file4.close()
+        
+        file5 = open("QueueStats.txt", "w")
+        file5.write('datapath, port-no, queue-id, tx-packets, tx-bytes, tx-errors, duration-sec')
+        file5.close()
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
@@ -63,6 +67,9 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
         
         req = parser.OFPMeterStatsRequest(datapath, 0, ofproto.OFPP_ANY)
         datapath.send_msg(req)
+        
+        req = parser.OFPQueueStatsRequest(datapath, 0, ofproto.OFPP_ANY)
+        datapath.send_msg(req)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
@@ -91,7 +98,7 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
         body = ev.msg.body
         self.logger.info('datapath         group_id length   ref-count packet-count byte-count duration-sec')
         self.logger.info('---------------- -------- -------- --------- ------------ ---------- ------------')
-        for stat in orted(body, key=attrgetter('group_id')):
+        for stat in body:
             self.logger.info('%016x %8d %8d %9d %11d %10d %12d', ev.msg.datapath.id, stat.group_id, stat.length, stat.ref_count, stat.packet_count, stat.byte_count, stat.duration_sec)
             file3.write("\n" + str(ev.msg.datapath.id) + "," + str(stat.group_id) + "," + str(stat.length) + "," + str(stat.ref_count) + "," + str(stat.packet_count) + "," + str(stat.byte_count) + "," + str(stat.duration_sec))
     
@@ -104,3 +111,14 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
         for stat in body:
             self.logger.info('%016x %08x %8d %9d %13d %13d'%12d', ev.msg.datapath.id, stat.meter_id, stat.len, stat.ref_count, stat.packet_in_count, stat.byte_in_count, stat.duration_sec)
             file4.write("\n" + str(ev.msg.datapath.id) + "," + str(stat.meter_id) + "," + str(stat.len) + "," + str(stat.ref_count) + "," + str(stat.packet_in_count) + "," + str(stat.byte_in_count) + "," + str(stat.duration_sec))
+    
+    @set_ev_cls(ofp_event.EventOFPQueueStatsReply, MAIN_DISPATCHER)
+    def queue_stats_reply_handler(self, ev):
+        file5 = open("QueueStats.txt", "w")
+        body = ev.msg.body
+        self.logger.info('datapath         port-no  queue-id tx-packets tx-bytes tx-errors duration-sec')
+        self.logger.info('---------------- -------- -------- ---------- -------- --------- ------------') 
+        for stat in sorted(body, key=attrgetter('port-no')):
+            self.logger.info('%016x %8d %8d %8d %8d %8d'%8d', ev.msg.datapath.id, stat.port_no, stat.queue_id, stat.tx_bytes, stat.tx_packets, stat.tx_errors, stat.duration_sec)
+            file5.write("\n" + str(ev.msg.datapath.id) + "," + str(stat.port_no) + "," + str(stat.queue_id) + "," + str(stat.tx_bytes) + "," + str(stat.tx_packets) + "," + str(stat.tx_errors) + "," + str(stat.duration_sec)
+       
