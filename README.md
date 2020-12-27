@@ -1,8 +1,7 @@
-# Traffic Monitoring Application for RYU  
+# Traffic Monitoring Application for RYU    
+Application that uses OpenFlow to obtain statistical information of the switch. A source code for adding a variety of statistical features from the simple monitor application of the RYU, which stores the collected data in a txt file.  
 ## Requirements  
-OpenFlow를 사용해 스위치의 통계 정보를 얻는 Application. RYU의 simple_monitor App에서 다양한 통계 항목을 추가한 소스코드이며, 수집한 데이터들을 txt 파일로 저장한다.  
-## Requirements  
-스위칭 허브의 실행을 위해 OpenFlow 스위치는 Open vSwitch 실행 환경으로 mininet을 사용한다.  
+For execution, OpenFlow switches use Mininet as an Open vSwitch execution environment.  
 - Mininet  
 - Open vSwitch  
 - Ryu  
@@ -11,37 +10,37 @@ OpenFlow를 사용해 스위치의 통계 정보를 얻는 Application. RYU의 s
 `$ cd ryu`  
 `$ sudo pip install .`  
 ## Running  
-1. Mininet 환경 시작  
-구축 환경은 호스트 3 대, 스위치 하나의 간단한 구성이다.  
+1. Set topology  
+The deployment environment is a simple configuration of three hosts, one switch.  
 `$ sudo mn --topo single,3 --mac --switch ovsk --controller remote -x`  
-실행하면 데스크탑 PC에서 5개의 xterm이 시작된다. 각 xterm은 호스트 1~3, 스위치, 그리고 컨트롤러에 대응한다.  
+When executed, five xterms are started. Each xterm corresponds to a host 1-3, switch, and controller.  
 
-2. 스위치에 대한 xterm에서 명령을 실행하여 사용하는 OpenFlow 버전을 설정한다.  
-윈도우 제목이 「switch : s1 (root)」인 xterm으로 스위치용 xterm이다.  
-우선 Open vSwitch의 상태를 확인한다.  
+2. Check the status of the Open vSwitch.  
+It is xterm for switches with the title 「switch : s1 (root)」.   
 **switch: s1:**  
 `root@ryu-vm:~# ovs-vsctl show`  
 `root@ryu-vm:~# ovs-dpctl show`  
-스위치 (브리지) s1 이 생성되었고, 호스트에 해당 포트가 3개 추가되어 있다.  
+Make sure that switch (bridge) s1 is created and that the host has three additional corresponding ports.  
 
-3. 다음 OpenFlow 버전을 1.3으로 설정합니다.  
+3. Set the OpenFlow version to 1.3.  
+Set the OpenFlow version by running the command in xterm for the switch.  
 **switch: s1:**  
 `root@ryu-vm:~# ovs-vsctl set Bridge s1 protocols=OpenFlow13`  
 
-4. 플로우 테이블을 확인해 본다.  
+4. Check the flow table.  
 **switch: s1:**  
 `root@ryu-vm:~# ovs-ofctl -O OpenFlow13 dump-flows s1`  
-ovs-ofctl 명령 실행시, 옵션으로 사용하는 OpenFlow 버전을 지정해야 한다. 기본값은 OpenFlow10 이다.  
+When executing the 'ovs-ofctl' command, you must specify the version of OpenFlow. The default is OpenFlow10.  
 
-5. 트래픽 모니터를 실행한다.  
-윈도우 제목이 「controller : c0 (root)」인 xterm에서 다음 명령을 실행한다.  
+5. Run the traffic monitor.  
+Run the following command in xterm with the window title「controller : c0 (root)」.  
 **controller: c0:**  
 `root@ryu-vm:~# ryu-manager --verbose ./traffic_monitor.py`  
-플로우 항목이 없고, 각 포트의 개수도 모두 0이다.  
+There are no flow entries, and the number of each port is also zero.  
 
-6. host1에서 host2로 ping을 실행한다.  
+6. Ping host1 to host2.  
 **host: h1:**  
 `root@ryu-vm:~# ping -c1 10.0.0.2`  
-패킷 전송 및 플로우 항목이 등록되고 통계 정보가 변경된다.  
+Packet transmission and flow entries are registered and statistical information is changed.  
 
-7. 윈도우 제목이 「controller : c0 (root)」인 xterm에서 플로우 통계 정보와 포트 통계 정보를 확인할 수 있다.
+7. Flow and port statistical information can be found in xterm with the window title 「controller : c0 (root)」.  
