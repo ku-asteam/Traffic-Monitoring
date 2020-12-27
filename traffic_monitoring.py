@@ -24,6 +24,10 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
         file3 = open("GroupStats.txt", "w")
         file3.write('datapath, group_id, length, ref-count, packet-count, byte-count, duration-sec')
         file3.close()
+        
+        file4 = open("MeterStats.txt", "w")
+        file4.write('datapath, meter-id, length, ref_count, packet-in-count, byte-in-count, duration-set')
+        file4.close()
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
@@ -54,7 +58,10 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
         req = parser.OFPPortStatsRequest(datapath, 0, ofproto.OFPP_ANY)
         datapath.send_msg(req)
         
-        req = parser.OFPGroupStatsRequest(datapath)
+        req = parser.OFPGroupStatsRequest(datapath, 0, ofproto.OFPP_ANY)
+        datapath.send_msg(req)
+        
+        req = parser.OFPMeterStatsRequest(datapath, 0, ofproto.OFPP_ANY)
         datapath.send_msg(req)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
@@ -85,5 +92,15 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
         self.logger.info('datapath         group_id length   ref-count packet-count byte-count duration-sec')
         self.logger.info('---------------- -------- -------- --------- ------------ ---------- ------------')
         for stat in orted(body, key=attrgetter('group_id')):
-            self.logger.info('%016xd %8d %8d %9d %11d %10d %d12', ev.msg.datapath.id, stat.group_id, stat.length, stat.ref_count, stat.packet_count, stat.byte_count, stat.duration_sec)
+            self.logger.info('%016x %8d %8d %9d %11d %10d %12d', ev.msg.datapath.id, stat.group_id, stat.length, stat.ref_count, stat.packet_count, stat.byte_count, stat.duration_sec)
             file3.write("\n" + str(ev.msg.datapath.id) + "," + str(stat.group_id) + "," + str(stat.length) + "," + str(stat.ref_count) + "," + str(stat.packet_count) + "," + str(stat.byte_count) + "," + str(stat.duration_sec))
+    
+    @set_ev_cls(ofp_event.EventOFPMeterStatsReply, MAIN_DISPATCHER)
+    def meter_stats_reply_handler(self, ev):
+        file4 = open("MeterStats.txt", "w")
+        body = ev.msg.body
+        self.logger.info('datapath         meter-id len      ref_count packet-in-count byte-in-count duration-sec')
+        self.logger.info('---------------- -------- -------- --------- --------------- ------------- ------------')
+        for stat in body:
+            self.logger.info('%016x %08x %8d %9d %13d %13d'%12d', ev.msg.datapath.id, stat.meter_id, stat.len, stat.ref_count, stat.packet_in_count, stat.byte_in_count, stat.duration_sec)
+            file4.write("\n" + str(ev.msg.datapath.id) + "," + str(stat.meter_id) + "," + str(stat.len) + "," + str(stat.ref_count) + "," + str(stat.packet_in_count) + "," + str(stat.byte_in_count) + "," + str(stat.duration_sec))
