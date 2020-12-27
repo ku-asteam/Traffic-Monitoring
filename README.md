@@ -43,4 +43,4 @@ There are no flow entries, and the number of each port is also zero.
 `root@ryu-vm:~# ping -c1 10.0.0.2`  
 Packet transmission and flow entries are registered and statistical information is changed.  
 
-7. Flow and port statistical information can be found in xterm with the window title 「controller : c0 (root)」.  
+7. Statistical information such as flows and ports can be found in xterm with the window title 「controller : c0 (root)」.  
