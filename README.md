@@ -8,7 +8,7 @@ OpenFlow를 사용해 스위치의 통계 정보를 얻는 Application. RYU의 s
 - Mininet
 - Open vSwitch
 - Ryu
-    $ sudo apt-get install git python-dev python-setuptools python-pip
+    `$ sudo apt-get install git python-dev python-setuptools python-pip`
     $ git clone https://github.com/osrg/ryu.git
     $ cd ryu
     $ sudo pip install .
